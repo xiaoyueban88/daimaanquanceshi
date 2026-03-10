@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<redis>
+    <serverlist>
+        <server name="dmp" role="master" cluster="sentinel"
+                address="${redis.bigdatareport.sentinels}" set="${redis.bigdatareport.instanceSetName}"
+                maxActive="${redis.bigdatareport.pool.maxActive}" password="${redis.bigdatareport.password}"
+                maxIdle="${redis.bigdatareport.pool.maxIdle}" testOnBorrow="${redis.bigdatareport.pool.testOnBorrow}">
+            <keylist>
+                <!-- davinci:view:{md5Key} -->
+                <key name="widget缓存数据" type="object" value="d:v:{md5Key}" />
+
+                <!-- davinci:dashboard:update:{dashboardId} -->
+                <key name="看板更新信息" type="object" value="d:d:u:{dashboardId}" />
+
+                <!-- datav:report:updateDashboardId:{reportUrl} -->
+                <key name="决策看板已更新的dashbardId" type="object" value="d:r:u:{reportUrl}" />
+
+                <!-- table:updateTime:{tableName} -->
+                <key name="table更新时间" type="object" value="t:u:{tableName}"/>
+
+                <!-- md5Key:updateTime:{md5Key} -->
+                <key name="数据缓存时间" type="object" value="m:u:{md5Key}"/>
+
+                <key name="当天已完成更新的dashboardId" type="object" value="c:d:u:d"/>
+
+                <!-- email:unable:send:list -->
+                <key name="定时邮件未成功发送标记" type="" value="e:u:s:l"/>
+
+                <key name="邮件任务执行锁" type="object" value="e:e:l:{jobId}"/>
+                <key name="缓存有效标志" type="object" value="d:v:i:{interval}:{md5key}"/>
+                <key name="记录总数" type="object" value="w:v:r:c:{sqlkey}"/>
+
+                <!--控制并发-->
+                <key name="excel下载变更发总数" type="object" value="con:limiter"/>
+
+            </keylist>
+        </server>
+    </serverlist>
+</redis>

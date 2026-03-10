@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="edp.davinci.dao.SqlQueryInfoMapper">
+    <insert id="insert" parameterType="edp.davinci.model.SqlQueryInfo">
+        insert into sql_query_info
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            `table_name`,
+            `detail`,
+            `md5_key`,
+            `dashboard_id`,
+            `source_id`,
+            `type`,
+            `cache_hit`
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            #{tableName,jdbcType=VARCHAR},
+            #{detail,jdbcType=LONGVARCHAR},
+            #{md5Key,jdbcType=VARCHAR},
+            #{dashboardId,jdbcType=BIGINT},
+            #{sourceId,jdbcType=BIGINT},
+            #{type,jdbcType=VARCHAR},
+            #{cacheHit,jdbcType=TINYINT}
+        </trim>
+    </insert>
+
+
+
+</mapper>

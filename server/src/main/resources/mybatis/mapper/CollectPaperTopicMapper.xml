@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="edp.davinci.dao.CollectPaperTopicMapper">
+    <insert id="insertBatch" useGeneratedKeys="true" keyProperty="id">
+        insert into collect_paper_topic
+        (`paper_id`,`key`, `field_name`, `type`, `config`, `order`, `is_delete`)
+        VALUES
+        <foreach collection="list" item="record" index="index" separator=",">
+            (
+            #{record.paperId,jdbcType=BIGINT},
+            #{record.key,jdbcType=VARCHAR},
+            #{record.fieldName,jdbcType=VARCHAR},
+            #{record.type,jdbcType=VARCHAR},
+            #{record.config,jdbcType=VARCHAR},
+            #{record.order,jdbcType=INTEGER},
+            #{record.isDelete,jdbcType=SMALLINT}
+            )
+        </foreach>
+    </insert>
+</mapper>

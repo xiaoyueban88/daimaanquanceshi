@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="edp.davinci.dao.CollectPaperApproverMapper">
+    <select id="getCount" resultType="java.lang.Integer">
+        select count(DISTINCT (a.paper_id)) from collect_paper_approver a
+        LEFT JOIN collect_paper b on a.paper_id=b.id
+        where a.user = #{username} and b.project_id=#{projectId} and a.is_delete=0
+        <if test="keyword!='' and keyword!=null">
+            <bind name="pattern" value="'%' + keyword + '%'"/>
+            and b.title like #{pattern}
+        </if>
+    </select>
+
+    <select id="getPaperIdByUser" resultType="java.lang.Long">
+        select DISTINCT (a.paper_id) from collect_paper_approver a
+        LEFT JOIN collect_paper b on a.paper_id=b.id
+        where a.user = #{username} and a.is_delete=0 and b.project_id=#{projectId}
+        <if test="keyword!='' and keyword!=null">
+            <bind name="pattern" value="'%' + keyword + '%'"/>
+            and b.title like #{pattern}
+        </if>
+        ORDER BY b.update_time DESC
+        LIMIT #{start},#{end}
+    </select>
+</mapper>

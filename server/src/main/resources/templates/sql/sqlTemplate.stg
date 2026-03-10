@@ -1,0 +1,309 @@
+/*
+    <<
+    Davinci
+    ==
+    Copyright (C) 2016 - 2018 EDP
+    ==
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+          http://www.apache.org/licenses/LICENSE-2.0
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+    >>
+ */
+
+
+createTable(tableName, fields, primaryKeys, indexKeys)
+::=<<
+CREATE TABLE `<tableName>` (
+    <fields:{field|`<field.name>` <field.type>};separator=",\n">
+    <if(primaryKeys)>
+    ,
+    PRIMARY KEY (<primaryKeys:{pk| `<pk>`};separator=",">)
+    <endif>
+    <if(indexKeys)>
+    ,
+    <indexKeys:{idx|<idx.keys:{k|KEY `<k>` (`<idx.(k)>`)}>};separator=",\n">
+    <endif>
+) DEFAULT CHARSET=utf8;
+>>
+
+
+insertData(tableName, columns)
+::=<<
+<if(columns)>
+INSERT INTO `<tableName>`
+(<columns:{item|<if(item.name)>`<item.name>`<endif>};separator=",">)
+VALUES
+(<columns:{item|<if(item.name)>?<endif>};separator=",">)
+<endif>
+>>
+
+
+queryAll(tableName, keywordPrefix, keywordSuffix)
+::=<<
+<if(tableName)>
+<if(keywordPrefix && keywordSuffix)>
+SELECT * FROM <keywordPrefix><tableName><keywordSuffix>
+<else>
+SELECT * FROM <tableName>
+<endif>
+<endif>
+>>
+
+querySql(nativeQuery, groups, aggregators, filters, havings, orders, outerOrders, sql, keywordPrefix, keywordSuffix)
+::=<<
+<if(!groups && !aggregators && !filters && !orders && !havings)>
+<sql>
+<else>
+SELECT
+<if(!groups && !aggregators)>
+ *
+<endif>
+<if(groups)>
+ <groups:{group|<if(keywordPrefix && keywordSuffix)><keywordPrefix><group><keywordSuffix><else><group><endif>}; separator=",">
+<endif>
+<if(groups && aggregators)>,<endif>
+<if(aggregators)>
+<if(nativeQuery)>
+ <aggregators:{agg|<if(agg)><if(keywordPrefix && keywordSuffix)><keywordPrefix><agg.column><keywordSuffix><else><agg.column><endif><endif>}; separator=",">
+<else>
+ <aggregators:{agg|<if(agg)><agg><endif>}; separator=",">
+<endif>
+<endif>
+FROM (<sql>) T
+<if(filters)>
+WHERE <filters:{filter|<if(filter)><filter><endif>}; separator=" AND ">
+<endif>
+<if(groups)>
+<if(!nativeQuery)>
+GROUP BY <groups:{group|<if(keywordPrefix && keywordSuffix)><keywordPrefix><group><keywordSuffix><else><group><endif>}; separator=",">
+<endif>
+<endif>
+<if(havings)>
+HAVING <havings:{having|<if(having)><having><endif>}; separator=" AND ">
+<endif>
+<if(orders || outerOrders)>
+ORDER BY
+<if(orders)>
+<orders:{order|<if(order)><order.column> <order.direction><endif>}; separator=", ">
+<endif>
+<if(orders && outerOrders)>
+,
+<endif>
+<if(outerOrders)>
+<outerOrders:{outerOrder|<if(outerOrder)><outerOrder.column> <outerOrder.direction><endif>}; separator=", ">
+<endif>
+<endif>
+<endif>
+>>
+
+buildExtraSql(groupBy, extraAggs, querySql, aggAlias, orders, arrayJoins, aliasPrefix, aliasSuffix)
+::=<<
+SELECT
+<if(aggAlias)>
+<aggAlias:{aggAlia|<aggAlia>}; separator=",">
+<endif>
+<if(aggAlias && extraAggs)>,<endif>
+<if(extraAggs)>
+<extraAggs:{extraAgg|<extraAgg.alias>}; separator=",">
+<endif>
+FROM (
+SELECT
+<if(aggAlias)>
+<aggAlias:{aggAlia|groupArray(<aggAlia>) AS <if(aliasPrefix && aliasSuffix)><aliasPrefix><aggAlia><aliasSuffix><else><aggAlia><endif>}; separator=",">
+<endif>
+<if(aggAlias && extraAggs)>,<endif>
+<if(extraAggs)>
+<extraAggs:{extraAgg|<extraAgg.function><extraAgg.functionPrefix><extraAgg.expression><extraAgg.functionSuffix> AS <if(aliasPrefix && aliasSuffix)><aliasPrefix><extraAgg.alias><aliasSuffix><else><extraAgg.alias><endif>}; separator=",">
+<endif>
+FROM (<querySql>) AS T
+<if(groupBy)>
+group by T.<groupBy>
+<endif>
+) as T
+ARRAY JOIN
+<if(arrayJoins)>
+<arrayJoins:{arrayJoin|<if(arrayJoin)><arrayJoin><endif>}; separator=",">
+<endif>
+<if(orders)>
+ORDER BY <orders:{order|<if(order)><order.column> <order.direction><endif>}; separator=", ">
+<endif>
+>>
+
+buildFinalSql(querySql, groups, finalAlias, finalAggs)
+::=<<
+<if(finalAlias || finalAggs)>
+SELECT
+<if(groups)>
+<groups:{group|<group>}; separator=",">
+<endif>
+<if(groups && (finalAlias || finalAggs))>,<endif>
+<if(finalAlias)>
+<finalAlias:{finalAlia|<if(finalAlia)><finalAlia><endif>}; separator=",">
+<endif>
+<if(finalAlias && finalAggs)>,<endif>
+<if(finalAggs)>
+<finalAggs:{agg|<if(agg)><agg><endif>}; separator=",">
+<endif>
+FROM (<querySql>) as T
+<endif>
+>>
+
+queryDistinctSql(columns, orderColumn, filters, direction, sql, keywordPrefix, keywordSuffix)
+::=<<
+<if(columns && sql)>
+<if(keywordPrefix && keywordSuffix)>
+SELECT DISTINCT <columns:{column|<if(column)>T.<keywordPrefix><column><keywordSuffix><endif>}; separator=",">
+FROM (<sql>) T
+<if(filters)>
+WHERE <filters:{filter|<if(filter)><filter><endif>}; separator=" AND ">
+<endif>
+ORDER BY
+<if(orderColumn)>
+<keywordPrefix><orderColumn><keywordSuffix> <direction>
+<else>
+<columns:{column|<if(column)>T.<keywordPrefix><column><keywordSuffix> <direction><endif>}; separator=",">
+<endif>
+<else>
+SELECT DISTINCT <columns:{column|<if(column)>T.<column><endif>}; separator=",">
+ FROM (<sql>) T
+<if(filters)>
+WHERE <filters:{filter|<if(filter)><filter><endif>}; separator=" AND ">
+<endif>
+ORDER BY
+<if(orderColumn)>
+<orderColumn> <direction>
+<else>
+<columns:{column|<if(column)>T.<column> <direction><endif>}; separator=",">
+<endif>
+<endif>
+LIMIT 2000
+<endif>
+>>
+
+newQueryDistinctSql(columns, filters, orders, sql, keywordPrefix, keywordSuffix)
+::=<<
+<if(columns && sql)>
+<if(keywordPrefix && keywordSuffix)>
+SELECT DISTINCT <columns:{column|<if(column)>T.<keywordPrefix><column><keywordSuffix><endif>}; separator=",">
+FROM (<sql>) T
+<if(filters)>
+WHERE <filters:{filter|<if(filter)><filter><endif>}; separator=" AND ">
+<endif>
+<if(orders)>
+ORDER BY
+<orders:{order|<if(order)><order.column> <order.direction><endif>}; separator=", ">
+<endif>
+<else>
+SELECT DISTINCT <columns:{column|<if(column)>T.<column><endif>}; separator=",">
+ FROM (<sql>) T
+<if(filters)>
+WHERE <filters:{filter|<if(filter)><filter><endif>}; separator=" AND ">
+<endif>
+<if(orders)>
+ORDER BY
+<orders:{order|<if(order)><order.column> <order.direction><endif>}; separator=", ">
+<endif>
+<endif>
+<endif>
+>>
+
+queryMaxOrMinSql(order ,columns, filters, sql, keywordPrefix, keywordSuffix)
+::=<<
+<if(columns && sql)>
+<if(keywordPrefix && keywordSuffix)>
+SELECT <columns:{column|<if(column)>T.<keywordPrefix><column><keywordSuffix><endif>}; separator=","> FROM (<sql>) T
+<if(filters)>
+WHERE <filters:{filter|<if(filter)><filter><endif>}; separator=" AND ">
+<endif>
+ORDER BY <columns:{column|<if(column)>T.<keywordPrefix><column><keywordSuffix><endif>}; separator=","> <order>
+LIMIT 1
+<else>
+SELECT <columns:{column|<if(column)>T.<column><endif>}; separator=","> FROM (<sql>) T
+<if(filters)>
+WHERE <filters:{filter|<if(filter)><filter><endif>}; separator=" AND ">
+<endif>
+ORDER BY <columns:{column|<if(column)>T.<column><endif>}; separator=","> <order>
+LIMIT 1
+<endif>
+<endif>
+>>
+
+queryUnionDistinctSql(sqls, limit, columns, direction, keywordPrefix, keywordSuffix)
+::=<<
+<if(sqls)>
+SELECT *
+FROM ( <sqls:{sql|<if(sql)>(<sql>)<endif>}; separator=" UNION ALL "> ) UT
+<endif>
+ORDER BY <columns:{column|<if(column)>UT.<column> <direction><endif>}; separator=","> <order>
+<if(limit)>
+LIMIT <limit>
+<endif>
+>>
+
+queryGroupCountSql(srcSql, groups, filters, havings)
+::=<<
+    SELECT count(1)
+    FROM (
+        SELECT <groups:{group|<if(group)>T.<group><endif>}; separator=",">
+        FROM  (<srcSql>) T
+        <if(filters)>
+        WHERE <filters:{filter|<if(filter)><filter><endif>}; separator=" AND ">
+        <endif>
+        GROUP BY <groups:{group|<if(group)>T.<group><endif>}; separator=",">
+        <if(havings)>
+        HAVING <havings:{having|<if(having)><having><endif>}; separator=" AND ">
+        <endif>
+    ) ST
+>>
+
+queryCrossSql(srcSql, rowGroups, colGroups, aggregators, orders, aliasPrefix, aliasSuffix, aggMethod)
+::=<<
+    SELECT
+    <rowGroups:{rowGroup|<rowGroup>}; separator=",">
+    <if(colGroups)>,<endif>
+    <if(colGroups)>
+        <colGroups:{colGroup|<aggMethod>(<colGroup>) AS <if(aliasPrefix && aliasSuffix)><aliasPrefix><colGroup><aliasSuffix><else><colGroup><endif> }; separator=",">
+    <endif>
+    <if(aggregators)>,<endif>
+    <if(aggregators)>
+        <aggregators:{agg|<aggMethod>(<agg>) AS <if(aliasPrefix && aliasSuffix)><aliasPrefix><agg><aliasSuffix><else><agg><endif> }; separator=",">
+    <endif>
+    FROM (
+        <srcSql>
+    ) CT
+    <if(rowGroups)>
+        GROUP BY <rowGroups:{rowGroup|<rowGroup>}; separator=",">
+    <endif>
+    <if(orders)>
+        ORDER BY <orders:{order|<if(order)><order.column> <order.direction><endif>}; separator=", ">
+    <endif>
+>>
+
+queryCrossOrderSql(srcSql, rowGroups, colGroups, aggregators, aliasPrefix, aliasSuffix, keyPrefix, keySuffix, aggMethod, condition, order, sortKeyMethod)
+::=<<
+    SELECT
+    <rowGroups:{rowGroup|<rowGroup>}; separator=",">
+    <if(colGroups)>,<endif>
+    <if(colGroups)>
+        <colGroups:{colGroup|<aggMethod>(<colGroup>) AS <if(aliasPrefix && aliasSuffix)><aliasPrefix><colGroup><aliasSuffix><else><colGroup><endif> }; separator=",">
+    <endif>
+    <if(aggregators)>,<endif>
+    <if(aggregators)>
+        <aggregators:{agg|<aggMethod>(<agg>) AS <if(aliasPrefix && aliasSuffix)><aliasPrefix><agg><aliasSuffix><else><agg><endif> }; separator=",">
+    <endif>
+    , <sortKeyMethod>(if(<condition>, <keyPrefix>_sortkey_<keySuffix>, null)) as <keyPrefix>_sortkey_<keySuffix>
+    FROM (
+        SELECT *,  <order.column> AS <keyPrefix>_sortkey_<keySuffix> FROM
+        (<srcSql>) BT
+    ) CT
+    <if(rowGroups)>
+        GROUP BY <rowGroups:{rowGroup|<rowGroup>}; separator=",">
+    <endif>
+    ORDER BY <keyPrefix>_sortkey_<keySuffix> <order.direction>
+>>

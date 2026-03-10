@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans
+		xmlns="http://www.springframework.org/schema/beans"
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		xmlns:dubbo="http://code.alibabatech.com/schema/dubbo"
+		xsi:schemaLocation="http://www.springframework.org/schema/beans            http://www.springframework.org/schema/beans/spring-beans-3.1.xsd            http://code.alibabatech.com/schema/dubbo            http://code.alibabatech.com/schema/dubbo/dubbo.xsd">
+
+	<dubbo:application name="edu-baizev2-webservice" />
+	<dubbo:consumer timeout="100000" retries="0" check="false"/>
+
+	<dubbo:registry protocol="zookeeper" address="zk01.service.zhixue:2181,zk02.service.zhixue:2181,zk03.service.zhixue:2181" register="true" file="ZX-monitor-blinkfeed-registry.cache"/>
+
+	<dubbo:reference id="odeonApiService" interface="com.iflytek.edu.zx.etl.service.OdeonApiService" check="false"/>
+	<dubbo:reference id="columnMappingService" interface="com.iflytek.edu.zx.etl.service.ColumnMappingService" check="false"/>
+	<dubbo:reference id="clickHouseHttpService" interface="com.iflytek.edu.zx.etl.service.ClickHouseHttpService" check="false"/>
+
+	<dubbo:reference id="stepService" interface="com.iflytek.edu.zx.etl.service.StepService" check="false"/>
+	<dubbo:reference id="elPriorityConfigService" interface="com.iflytek.edu.zx.etl.service.ElPriorityConfigService" check="false"/>
+
+	<dubbo:reference id="etlProcessService" interface="com.iflytek.edu.zx.etl.service.EtlProcessService" check="false"/>
+	<dubbo:reference id="jobService" interface="com.iflytek.edu.zx.etl.service.JobService" check="false"/>
+	<dubbo:reference id="elTaskService" interface="com.iflytek.edu.zx.etl.service.ElTaskService" check="false"/>
+	<dubbo:reference id="processNodeService" interface="com.iflytek.edu.zx.etl.service.ProcessNodeService" check="false"/>
+	<dubbo:reference id="nodeService" interface="com.iflytek.edu.zx.etl.service.NodeService" check="false"/>
+
+	<dubbo:reference id="routerService" interface="com.iflytek.edu.zx.etl.service.RouterService" check="false"/>
+	<dubbo:reference interface="com.iflytek.edu.zx.filecloud.api.FileCloudConfigService" id="fileCloudConfigService" check="false" />
+	<dubbo:reference interface="com.iflytek.edu.zx.bizservice.system.oss.service.OSSFileService" id="ossFileService" check="false" />
+
+	<dubbo:reference id="reportService" interface="com.iflytek.edu.zx.table.admin.service.ReportService" check="false"/>
+
+	<dubbo:service  interface="com.iflytek.edu.sbd.service.PlatformService"
+					ref="platformService" protocol="dubbo" timeout="600000"
+	/>
+
+</beans>

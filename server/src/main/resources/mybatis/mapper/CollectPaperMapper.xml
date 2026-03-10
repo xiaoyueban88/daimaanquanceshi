@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="edp.davinci.dao.CollectPaperMapper">
+    <insert id="insert" parameterType="edp.davinci.model.CollectPaper">
+        <selectKey resultType="java.lang.Long" order="AFTER" keyProperty="id">
+            SELECT LAST_INSERT_ID() AS id
+        </selectKey>
+        insert into collect_paper
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            `uuid`,
+            `project_id`,
+            `title`,
+            `type`,
+            `status`,
+            `create_by`,
+            `deadline`,
+            `expires`,
+            `is_delete`
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            #{uuid,jdbcType=VARCHAR},
+            #{projectId,jdbcType=BIGINT},
+            #{title,jdbcType=VARCHAR},
+            #{type,jdbcType=SMALLINT},
+            #{status,jdbcType=SMALLINT},
+            #{createBy,jdbcType=VARCHAR},
+            #{deadline,jdbcType=TIMESTAMP},
+            #{expires, jdbcType=INTEGER},
+            #{isDelete, jdbcType=SMALLINT}
+        </trim>
+    </insert>
+
+    <select id="getPaperApproveInfo" resultType="edp.davinci.dto.CollectDto.PaperApproveDto">
+        SELECT
+        a.id as paperId,
+        a.title,
+        count(IF(b.status = 0, a.id, NULL)) AS `unApproveCount`,
+        count(IF(b.status = 1, a.id, NULL)) AS `approvedCount`
+        FROM
+        collect_paper a
+        LEFT JOIN collect_paper_submit b ON (a.id = b.paper_id and a.is_delete=0 and b.is_delete = 0)
+        WHERE a.is_delete=0 and a.id IN
+        <foreach collection="list" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        GROUP BY a.id
+        ORDER BY a.update_time DESC
+    </select>
+
+    <select id="getMyPaperCount" resultType="java.lang.Integer">
+        select count(id) from collect_paper where project_id = #{projectId} and create_by = #{username} and is_delete=0
+        <if test="keyword!='' and keyword!=null">
+            <bind name="pattern" value="'%' + keyword + '%'"/>
+            and title like #{pattern}
+        </if>
+    </select>
+
+    <select id ="getMyPaperByPager" resultType="edp.davinci.model.CollectPaper">
+        select pa.*, ap.user as approver
+          from collect_paper pa
+          left join collect_paper_approver ap on (pa.id=ap.paper_id and pa.is_delete=0 and ap.is_delete=0)
+          where
+            pa.project_id = #{projectId} and pa.create_by = #{username} and pa.is_delete=0
+            <if test="keyword!='' and keyword!=null">
+                <bind name="pattern" value="'%' + keyword + '%'"/>
+                and pa.title like #{pattern}
+            </if>
+          order by pa.update_time desc
+          LIMIT #{start},#{end}
+    </select>
+
+    <update id="updateStatus">
+        update collect_paper set status = #{status}
+        where is_delete=0 AND id in
+        <foreach collection="list" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </update>
+</mapper>

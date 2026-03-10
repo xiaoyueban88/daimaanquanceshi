@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="edp.davinci.dao.WidgetFolderMapper">
+
+    <insert id="insert" parameterType="edp.davinci.model.WidgetFolder">
+        <selectKey resultType="java.lang.Long" order="AFTER" keyProperty="id">
+            SELECT LAST_INSERT_ID() AS id
+        </selectKey>
+        insert into widget_folder
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            `name`,
+            `parent_id`,
+            `project_id`
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            #{name,jdbcType=VARCHAR},
+            #{parentId,jdbcType=BIGINT},
+            #{projectId,jdbcType=BIGINT}
+        </trim>
+    </insert>
+</mapper>

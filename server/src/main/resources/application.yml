@@ -1,0 +1,77 @@
+spring:
+  profiles:
+    active: test
+  session:
+    store-type: redis
+  redis:
+    password: 7sm8UlA#OA1X
+    sentinel:
+      master: dcp-shard-01
+      nodes:
+        - 172.30.33.131:12101
+        - 172.30.34.44:12101
+        - 172.30.34.45:12101
+
+cas:
+  server:
+    host:
+      logout_url: https://ssoqxb.iflytek.com:8443/sso/logout?service=http://172.31.130.139:8777/organizations/e21806585cdf47abb2f06bc43fa92451/vizs
+      login_url: https://ssoqxb.iflytek.com:8443/sso/login
+      url: https://ssoqxb.iflytek.com:8443/sso/
+app:
+  secret: davinci
+
+redis:
+  maxWaitMillis: -1
+  minIdle: 0
+  maxIdle: 8
+  testOnBorrow: true
+  maxTotal: 10
+  testOnReturn: true
+  evictionPolicyClassName: org.apache.commons.pool2.impl.DefaultEvictionPolicy
+  blockWhenExhausted: true
+
+server:
+  compression:
+    enabled: true
+#    min-response-size: 1024
+    mime-types: application/json,application/xml,application/xhtml+xml,text/html,text/xml,text/plain
+
+kafka:
+  consumer:
+    bootstrap:
+      servers: 172.31.130.121:9092
+  producer:
+    bootstrap:
+      servers: 172.31.130.121:9092
+
+default:
+  cache:
+    time: 36000
+  distinct:
+    limit: 2000
+
+oss:
+  filecloud:
+    appId: bigdata
+    category: bigdata
+    appSecret: JoGqdDo1Kme7YHOyzmXi
+
+baize:
+  web:
+    url:
+
+source:
+  result-limit: 200000
+
+accessToken:
+  timeout: 3600000
+jwtToken:
+  timeout: 1800000
+download:
+  excel:
+    concurrent:
+      limit: 10
+    max:
+      lock:
+        time: 1200

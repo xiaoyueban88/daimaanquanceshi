@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="edp.davinci.dao.CollectPaperSubmitMapper">
+    <insert id="insert" parameterType="edp.davinci.model.CollectPaperSubmit">
+        <selectKey resultType="java.lang.Long" order="AFTER" keyProperty="id">
+            SELECT LAST_INSERT_ID() AS id
+        </selectKey>
+        insert into collect_paper_submit
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            `paper_id`,
+            `user`,
+            `status`,
+            `approve_time`,
+            `is_delete`
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            #{paperId,jdbcType=BIGINT},
+            #{user,jdbcType=VARCHAR},
+            #{status,jdbcType=SMALLINT},
+            #{approveTime},
+            #{isDelete,jdbcType=SMALLINT}
+        </trim>
+    </insert>
+
+    <select id="getCount" resultType="java.lang.Integer">
+        select count(id) from collect_paper_submit
+        where is_delete=0 and paper_id=#{paperId}
+        <if test="status!=null">
+            and status = #{status}
+        </if>
+    </select>
+
+    <select id="getListByPage" resultType="edp.davinci.model.CollectPaperSubmit">
+        select id, paper_id, `user`, status, create_time, is_delete, approve_time, approver
+        from collect_paper_submit
+        where is_delete=0 and paper_id=#{paperId}
+        <if test="status!=null">
+            and status = #{status}
+        </if>
+        ORDER by create_time DESC
+        limit #{start}, #{end}
+    </select>
+
+    <update id="approveSubmits">
+        UPDATE collect_paper_submit
+        set status=1, approve_time=#{approveTime}, approver=#{approver}
+        where paper_id=#{paperId} and status=0 and is_delete=0 and id IN
+            <foreach collection="list" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+    </update>
+
+    <update id="removeBatch">
+        UPDATE collect_paper_submit
+        set is_delete = 1
+        where id IN
+        <foreach collection="list" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </update>
+</mapper>
