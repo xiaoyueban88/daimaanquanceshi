@@ -68,6 +68,7 @@ accessToken:
   timeout: 3600000
 jwtToken:
   timeout: 1800000
+  secret: ${JWT_TOKEN_SECRET}
 download:
   excel:
     concurrent:

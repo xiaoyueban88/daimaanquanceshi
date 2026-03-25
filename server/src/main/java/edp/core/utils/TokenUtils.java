@@ -51,8 +51,8 @@ public class TokenUtils {
     /**
      * 自定义 token 私钥
      */
-//    @Value("${jwtToken.secret:Pa@ss@Word}")
-    private String SECRET = "Pa@ss@Word";
+    @Value("${jwtToken.secret}")
+    private String SECRET;
 
     /**
      * 默认 token 超时时间
@@ -80,6 +80,9 @@ public class TokenUtils {
 
     @PostConstruct
     public void init() {
+        if (StringUtils.isEmpty(SECRET)) {
+            throw new IllegalStateException("jwtToken.secret must be configured");
+        }
         log.info("ACCESS_TIMEOUT = {}, TIMEOUT = {}", ACESS_TIMEOUT, TIMEOUT);
     }
 
