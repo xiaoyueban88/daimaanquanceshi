@@ -133,13 +133,13 @@ public class SqlFilter {
     public static String generator(Criterion criterion) {
         StringBuilder whereClause = new StringBuilder();
 
-        // REGEXP/NOT REGEXP: regex patterns are technical expressions and must not be quoted
-        // to allow complex patterns such as [0-9]+, (?i)pattern, etc.
+        // REGEXP/NOT REGEXP: treat regex as SQL string literal to avoid SQL injection
         if (SqlOperatorEnum.REGEXP.getValue().equalsIgnoreCase(criterion.getOperator())
                 || SqlOperatorEnum.NOTREGEXP.getValue().equalsIgnoreCase(criterion.getOperator())) {
+            String value = criterion.getValue().toString();
             whereClause.append(criterion.getColumn())
                     .append(Consts.SPACE).append(criterion.getOperator()).append(Consts.SPACE)
-                    .append(criterion.getValue());
+                    .append(Consts.APOSTROPHE).append(value.replace(Consts.APOSTROPHE, Consts.APOSTROPHE + Consts.APOSTROPHE)).append(Consts.APOSTROPHE);
             return whereClause.toString();
         }
 

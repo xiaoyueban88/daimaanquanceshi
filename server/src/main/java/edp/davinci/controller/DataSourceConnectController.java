@@ -122,7 +122,7 @@ public class DataSourceConnectController extends BaseController {
             host = host.trim().toLowerCase();
 
             for (String allowed : allowedHosts) {
-                if (host.contains(allowed.trim().toLowerCase())) {
+                if (host.equals(allowed.trim().toLowerCase())) {
                     return true;
                 }
             }
