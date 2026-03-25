@@ -118,6 +118,13 @@ public class UserBatchImportController extends BaseController {
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         // 允许命名空间以支持企业 SSO 导出格式
         dbf.setNamespaceAware(true);
+        // 安全加固：禁用 DTD 与外部实体，防止 XXE
+        dbf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+        dbf.setFeature("http://xml.org/sax/features/external-general-entities", false);
+        dbf.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+        dbf.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+        dbf.setXIncludeAware(false);
+        dbf.setExpandEntityReferences(false);
         DocumentBuilder db = dbf.newDocumentBuilder();
         Document doc = db.parse(xmlStream);
         doc.getDocumentElement().normalize();
