@@ -40,7 +40,9 @@ public enum SqlOperatorEnum {
     MINORTHAN("<"),
     MINORTHANEQUALS("<="),
     NOTEQUALSTO("!="),
-    EXISTS("EXISTS");
+    EXISTS("EXISTS"),
+    REGEXP("REGEXP"),
+    NOTREGEXP("NOT REGEXP");
 
     private String value;
 

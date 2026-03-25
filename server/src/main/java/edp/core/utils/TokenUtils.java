@@ -23,6 +23,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import javax.servlet.http.HttpServletRequest;
 
 import com.alibaba.druid.util.StringUtils;
 import com.google.common.collect.Maps;
@@ -486,5 +487,26 @@ public class TokenUtils {
     public Boolean isExpiredForPlatformShareToken(String token) {
         final Date expiration = getExpirationDate(token);
         return null == expiration ? true : expiration.before(new Date(System.currentTimeMillis()));
+    }
+
+    /**
+     * 从请求中提取 token。
+     * 优先从 Authorization 头中读取；若不存在，则兼容旧版移动端客户端通过
+     * access_token 查询参数传递 token 的方式。
+     *
+     * @param request HTTP 请求
+     * @return token 字符串，未找到时返回 null
+     */
+    public String getTokenFromRequest(HttpServletRequest request) {
+        String authHeader = request.getHeader(Constants.TOKEN_HEADER_STRING);
+        if (!StringUtils.isEmpty(authHeader) && authHeader.startsWith(Consts.TOKEN_PREFIX)) {
+            return authHeader.substring(Consts.TOKEN_PREFIX.length()).trim();
+        }
+        // 兼容：部分旧版客户端将 token 附加在 URL 查询参数中
+        String queryToken = request.getParameter("access_token");
+        if (!StringUtils.isEmpty(queryToken)) {
+            return queryToken;
+        }
+        return null;
     }
 }
